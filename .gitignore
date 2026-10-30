@@ -1,0 +1,5 @@
+data_raw/
+data/credit_risk.db
+__pycache__/
+.ipynb_checkpoints/
+.env
