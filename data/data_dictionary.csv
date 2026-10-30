@@ -1,0 +1,16 @@
+column_name,description,data_type,possible_values
+loan_id,Identifier unik untuk setiap pinjaman,INTEGER,Angka bulat (1 - 32409)
+person_age,Umur peminjam dalam tahun,INTEGER,20 - 94 (sudah difilter <= 100)
+person_income,Pendapatan tahunan peminjam dalam USD,INTEGER,Angka bulat (median: 55000)
+person_home_ownership,Status kepemilikan rumah peminjam,TEXT,RENT, MORTGAGE, OWN, OTHER
+person_emp_length,Masa kerja peminjam dalam tahun,REAL,0 - 41 (ada data kosong/NULL)
+loan_intent,Tujuan penggunaan pinjaman,TEXT,EDUCATION, MEDICAL, VENTURE, PERSONAL, DEBTCONSOLIDATION, HOMEIMPROVEMENT
+loan_grade,Peringkat risiko pinjaman dari penilai kredit,TEXT,A, B, C, D, E, F, G
+loan_amnt,Jumlah nominal pinjaman dalam USD,INTEGER,500 - 35000
+loan_int_rate,Tingkat suku bunga pinjaman (persen),REAL,5.42 - 23.22 (ada data kosong/NULL)
+loan_status,Status pinjaman (target analisis),INTEGER,0 = Lancar, 1 = Gagal Bayar
+loan_percent_income,Rasio jumlah pinjaman terhadap pendapatan tahunan,REAL,0.00 - 0.83 (desimal)
+cb_person_default_on_file,Catatan riwayat gagal bayar sebelumnya di biro kredit,TEXT,Y = Pernah, N = Tidak Pernah
+cb_person_cred_hist_length,Panjang riwayat kredit peminjam dalam tahun,INTEGER,2 - 30
+age_group,Kelompok rentang umur peminjam,TEXT,20-25, 26-30, 31-35, 36-45, 46+
+income_band,Kelompok rentang pendapatan tahunan peminjam,TEXT,<30k, 30-50k, 50-75k, 75-100k, 100k+
