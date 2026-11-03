@@ -104,13 +104,13 @@ credit-risk-analysis/
 │   ├── level2_segmentasi.sql
 │   ├── level3_cte_subquery.sql
 │   └── level4_window_function.sql
-├── apps-script/
-│   ├── Code.gs             # Logika server dashboard
-│   └── index.html          # Tampilan dashboard
 ├── dashboard/
+│   ├── apps-script/
+│   │   ├── Code.gs             # Logika server dashboard
+│   │   └── index.html          # Tampilan dashboard
 │   └── screenshoot_dashboard.jpg   # Tangkapan layar dashboard
 └── docs/
-    └── kesimpulan_bisnis.md# Laporan analitis & rekomendasi
+    └── kesimpulan_bisnis.md    # Laporan analitis & rekomendasi
 ```
 
 
@@ -192,5 +192,5 @@ Laporan lengkap: 👉 [**Kesimpulan Bisnis & Rekomendasi (docs/kesimpulan_bisnis
 - ✅ **Fase 2: Pembersihan Data & Pembuatan Database SQLite (Python)**
 - ✅ **Fase 3: Eksplorasi & Analisis Data Menggunakan SQL (Level 1-4)**
 - ✅ **Fase 4: Perancangan Dashboard Interaktif (Google Apps Script)**
-- ⬜ **Fase 5: Sintesis Temuan & Rekomendasi Bisnis**
+- ✅ **Fase 5: Sintesis Temuan & Rekomendasi Bisnis**
 - ⬜ **Fase 6: Finalisasi & Publikasi Portofolio**
