@@ -21,7 +21,7 @@ const CONFIG = Object.freeze({
   SHEET_NAME: 'credit_risk_clean',
   CACHE_TTL_SECONDS: 300, // cache hasil agregasi (5 menit)
   MEMORY_TTL_MS: 60 * 1000, // cache baris mentah di memori instance warm
-  CACHE_VERSION: 'v1' // naikkan bila struktur payload berubah
+  CACHE_VERSION: 'v3' // ubah angka ini untuk memaksa hitung ulang setelah perbaikan
 });
 
 const COLUMNS = Object.freeze({

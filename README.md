@@ -127,7 +127,7 @@ Dashboard dipublikasikan sebagai web app Google Apps Script dan dapat diakses me
 - **Total Pinjaman**: 32.409
 - **Total Nilai Pinjaman**: $310,9M
 - **Gagal Bayar**: 7.088 (21,87%)
-- **Rata-rata Suku Bunga**: 11,07%
+- **Rata-rata Suku Bunga**: 11,02%
 
 ### 🔍 Komponen Visualisasi & Temuan Kunci
 
