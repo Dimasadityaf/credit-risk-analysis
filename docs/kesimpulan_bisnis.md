@@ -3,7 +3,7 @@
 > **Fase 5: Sintesis Temuan & Rekomendasi Bisnis**
 > Sumber data: `data/credit_risk.db` (tabel `credit_risk`, 32.409 pinjaman)
 > Query: [`sql/level1_dasar.sql`](../sql/level1_dasar.sql) – [`sql/level4_window_function.sql`](../sql/level4_window_function.sql)
-> Dashboard: [Live Interactive Dashboard](https://script.google.com/macros/s/AKfycbwSGJd_832tYZGm54wd8xQxUyfNdPzLAdk5XQUvCJAqzAyEFAvOEM24zw1tQFHDLPn7/exec)
+> Dashboard: [Live Interactive Dashboard](https://script.google.com/macros/s/AKfycbyKCTMJhE2ylDZ4no0P_csDjuMttsZsWC6EtzNj2hPJco_MzQ-nRZuXRjXFYIRxh4JC/exec)
 
 * * *
 
@@ -185,5 +185,5 @@ Riwayat gagal bayar **melipatgandakan risiko ~2x lipat** — dan berlaku di semu
 | Query Level 2 — Segmentasi | [`sql/level2_segmentasi.sql`](../sql/level2_segmentasi.sql) |
 | Query Level 3 — CTE & Subquery | [`sql/level3_cte_subquery.sql`](../sql/level3_cte_subquery.sql) |
 | Query Level 4 — Window Functions | [`sql/level4_window_function.sql`](../sql/level4_window_function.sql) |
-| Dashboard Interaktif | [Live Dashboard (Google Apps Script)](https://script.google.com/macros/s/AKfycbwSGJd_832tYZGm54wd8xQxUyfNdPzLAdk5XQUvCJAqzAyEFAvOEM24zw1tQFHDLPn7/exec) |
+| Dashboard Interaktif | [Live Dashboard (Google Apps Script)](https://script.google.com/macros/s/AKfycbyKCTMJhE2ylDZ4no0P_csDjuMttsZsWC6EtzNj2hPJco_MzQ-nRZuXRjXFYIRxh4JC/exec) |
 | Skrip Pembersihan | [`scripts/clean_data.py`](../scripts/clean_data.py) |

@@ -121,7 +121,7 @@ credit-risk-analysis/
 
 Dashboard dipublikasikan sebagai web app Google Apps Script dan dapat diakses melalui tautan berikut:
 
-🔗 **[Live Interactive Dashboard](https://script.google.com/macros/s/AKfycbwSGJd_832tYZGm54wd8xQxUyfNdPzLAdk5XQUvCJAqzAyEFAvOEM24zw1tQFHDLPn7/exec)**
+🔗 **[Live Interactive Dashboard](https://script.google.com/macros/s/AKfycbyKCTMJhE2ylDZ4no0P_csDjuMttsZsWC6EtzNj2hPJco_MzQ-nRZuXRjXFYIRxh4JC/exec)**
 
 [![Credit Risk Dashboard](dashboard/screenshoot_dashboard.jpg)](dashboard/screenshoot_dashboard.jpg)
 
