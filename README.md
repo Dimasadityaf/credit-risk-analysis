@@ -113,17 +113,12 @@ credit-risk-analysis/
     └── kesimpulan_bisnis.md# Laporan analitis & rekomendasi
 ```
 
-<!--
-==============================================================
-TAMBAHKAN BAGIAN INI SETELAH FASE 4 (DASHBOARD SELESAI).
-Hapus tanda komentar di awal dan akhir, lalu isi sesuai angka yang sudah cocok dengan SQL.
-==============================================================
-
-* * *
 
 ## 🖥️ Dashboard Interaktif (Google Apps Script)
 
-Dashboard dipublikasikan sebagai web app dan dapat diakses publik melalui tautan berikut: 🔗 [**Live Interactive Dashboard**](ISI_TAUTAN_VIEW_DI_SINI)
+Dashboard dipublikasikan sebagai web app Google Apps Script dan dapat diakses melalui tautan berikut:
+
+🔗 **[Live Interactive Dashboard](https://script.google.com/macros/s/AKfycbwSGJd_832tYZGm54wd8xQxUyfNdPzLAdk5XQUvCJAqzAyEFAvOEM24zw1tQFHDLPn7/exec)**
 
 > Halaman pertama dapat memuat beberapa detik, dan Google menampilkan banner peringatan standar untuk web app Apps Script.
 
@@ -132,17 +127,16 @@ Dashboard dipublikasikan sebagai web app dan dapat diakses publik melalui tautan
 ### 📌 Ringkasan KPI Utama
 
 - **Total Pinjaman**: 32.409
-- **Total Nilai Pinjaman**: ISI_SETELAH_DIHITUNG
-- **Gagal Bayar**: ISI_SETELAH_DIHITUNG
-- **Rata-rata Suku Bunga**: ISI_SETELAH_DIHITUNG
+- **Total Nilai Pinjaman**: $310,9M
+- **Gagal Bayar**: 7.088 (21,87%)
+- **Rata-rata Suku Bunga**: 11,07%
 
 ### 🔍 Komponen Visualisasi & Temuan Kunci
 
-1. **Gagal Bayar per Loan Grade** - ISI_TEMUAN
-2. **Gagal Bayar per Tujuan Pinjaman** - ISI_TEMUAN
-3. **Gagal Bayar per Kelompok Pendapatan** - ISI_TEMUAN
-4. **Gagal Bayar per Status Rumah** - ISI_TEMUAN
--->
+1. **Gagal Bayar per Loan Grade** – Lonjakan tajam terjadi mulai Grade D (59,05%) hingga Grade G (98,44%).
+2. **Gagal Bayar per Tujuan Pinjaman** – Debt consolidation tertinggi (28,7%), diikuti Medical (26,8%) dan Home Improvement (26,2%).
+3. **Gagal Bayar per Kelompok Pendapatan** – Pendapatan <30k paling berisiko (47,2%), sedangkan 100k+ paling aman (8,95%).
+4. **Gagal Bayar per Status Rumah** – Peminjang yang menyewa (RENT) memiliki risiko 31,61%, jauh lebih tinggi dari pemilik rumah (OWN) 7,49%.
 
 <!--
 ==============================================================
@@ -198,7 +192,7 @@ Laporan lengkap: 👉 [**Kesimpulan Bisnis & Rekomendasi (docs/kesimpulan_bisnis
 - ✅ **Fase 0: Persiapan Proyek & Repositori Git**
 - ✅ **Fase 1: Pemahaman Data & Rumusan Masalah Bisnis**
 - ✅ **Fase 2: Pembersihan Data & Pembuatan Database SQLite (Python)**
-- ⬜ **Fase 3: Eksplorasi & Analisis Data Menggunakan SQL (Level 1-4)**
-- ⬜ **Fase 4: Perancangan Dashboard Interaktif (Google Apps Script)**
+- ✅ **Fase 3: Eksplorasi & Analisis Data Menggunakan SQL (Level 1-4)**
+- ✅ **Fase 4: Perancangan Dashboard Interaktif (Google Apps Script)**
 - ⬜ **Fase 5: Sintesis Temuan & Rekomendasi Bisnis**
 - ⬜ **Fase 6: Finalisasi & Publikasi Portofolio**

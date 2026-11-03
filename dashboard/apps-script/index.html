@@ -1,0 +1,1556 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Credit Risk Intelligence — Portfolio Dashboard</title>
+<meta name="description" content="Dashboard interaktif analisis risiko kredit portofolio pinjaman: default rate per grade, tujuan pinjaman, beban cicilan, dan profil peminjam." />
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        fontFamily: {
+          sans: ['"Plus Jakarta Sans"', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+          mono: ['"JetBrains Mono"', 'ui-monospace', 'SFMono-Regular', 'monospace']
+        },
+        boxShadow: {
+          card: '0 30px 70px -40px rgba(0,0,0,0.95)'
+        }
+      }
+    }
+  };
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"></script>
+
+<style>
+  :root {
+    color-scheme: dark;
+    --bg: #060a13;
+    --surface: #0b1220;
+    --line: rgba(148, 163, 184, 0.10);
+    --teal: #2dd4bf;
+    --amber: #fbbf24;
+    --rose: #fb7185;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background:
+      radial-gradient(900px 520px at 12% -8%, rgba(45, 212, 191, 0.10), transparent 62%),
+      radial-gradient(760px 460px at 92% -4%, rgba(99, 102, 241, 0.12), transparent 58%),
+      var(--bg);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .bg-grid {
+    background-image:
+      linear-gradient(rgba(148, 163, 184, 0.045) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(148, 163, 184, 0.045) 1px, transparent 1px);
+    background-size: 56px 56px;
+    mask-image: radial-gradient(ellipse 85% 55% at 50% 0%, #000 35%, transparent 100%);
+    -webkit-mask-image: radial-gradient(ellipse 85% 55% at 50% 0%, #000 35%, transparent 100%);
+  }
+
+  .panel {
+    border-radius: 18px;
+    border: 1px solid var(--line);
+    background: linear-gradient(180deg, rgba(13, 22, 38, 0.92) 0%, rgba(8, 14, 25, 0.92) 100%);
+    box-shadow: 0 30px 70px -40px rgba(0, 0, 0, 0.95);
+  }
+
+  .kpi {
+    border-radius: 18px;
+    border: 1px solid var(--line);
+    background: linear-gradient(180deg, rgba(14, 24, 41, 0.95) 0%, rgba(8, 14, 25, 0.95) 100%);
+    box-shadow: 0 24px 60px -40px rgba(0, 0, 0, 0.95);
+    transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+  }
+  .kpi:hover {
+    transform: translateY(-3px);
+    border-color: rgba(148, 163, 184, 0.2);
+    box-shadow: 0 34px 70px -40px rgba(0, 0, 0, 1);
+  }
+  .kpi::before {
+    content: "";
+    position: absolute;
+    inset: -40% -20% auto auto;
+    width: 190px;
+    height: 190px;
+    border-radius: 999px;
+    background: radial-gradient(circle, rgba(var(--glow), 0.16), transparent 65%);
+    pointer-events: none;
+  }
+
+  .icon-box {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    border-radius: 12px;
+    border: 1px solid rgba(var(--glow), 0.22);
+    background: rgba(var(--glow), 0.10);
+    color: rgb(var(--glow));
+  }
+
+  .delta {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 8px;
+    border-radius: 999px;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    white-space: nowrap;
+    border: 1px solid transparent;
+  }
+  .delta-good { background: rgba(45, 212, 191, 0.10); border-color: rgba(45, 212, 191, 0.20); color: #5eead4; }
+  .delta-bad { background: rgba(251, 113, 133, 0.10); border-color: rgba(251, 113, 133, 0.22); color: #fda4af; }
+  .delta-neutral { background: rgba(148, 163, 184, 0.08); border-color: rgba(148, 163, 184, 0.16); color: #94a3b8; }
+
+  .select {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 100%;
+    border-radius: 12px;
+    border: 1px solid rgba(148, 163, 184, 0.16);
+    background-color: #0b1524;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding: 10px 36px 10px 12px;
+    font-size: 13px;
+    font-weight: 500;
+    color: #e2e8f0;
+    cursor: pointer;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+  }
+  .select:hover { border-color: rgba(45, 212, 191, 0.32); background-color: #0d1a2b; }
+  .select:focus {
+    outline: none;
+    border-color: rgba(45, 212, 191, 0.55);
+    box-shadow: 0 0 0 3px rgba(45, 212, 191, 0.12);
+  }
+  .select:disabled { opacity: 0.55; cursor: progress; }
+  .select option { background: #0b1524; color: #e2e8f0; }
+
+  .icon-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 11px;
+    border: 1px solid rgba(148, 163, 184, 0.14);
+    background: rgba(148, 163, 184, 0.05);
+    color: #94a3b8;
+    transition: all 0.2s ease;
+  }
+  .icon-btn:hover { color: #f8fafc; border-color: rgba(45, 212, 191, 0.4); background: rgba(45, 212, 191, 0.08); }
+  .icon-btn:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(45, 212, 191, 0.18); }
+  .icon-btn.spinning svg { animation: spin 0.9s linear infinite; }
+
+  .live-dot {
+    width: 6px; height: 6px; border-radius: 999px; background: #2dd4bf;
+    box-shadow: 0 0 0 0 rgba(45, 212, 191, 0.55);
+    animation: pulse-dot 2.4s ease-out infinite;
+  }
+  @keyframes pulse-dot {
+    0% { box-shadow: 0 0 0 0 rgba(45, 212, 191, 0.45); }
+    70% { box-shadow: 0 0 0 7px rgba(45, 212, 191, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(45, 212, 191, 0); }
+  }
+
+  .chart-frame { position: relative; }
+  .chart-frame::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 12px;
+    background: rgba(6, 10, 19, 0.55);
+    backdrop-filter: blur(1.5px);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease;
+  }
+  #dashboard.is-loading .chart-frame::after { opacity: 1; }
+
+  .heat-cell {
+    min-height: 64px;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    padding: 8px 6px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    text-align: center;
+    transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+  }
+  .heat-cell:hover { transform: translateY(-2px); border-color: rgba(255, 255, 255, 0.18); box-shadow: 0 14px 26px -18px rgba(0, 0, 0, 1); }
+  .heat-value { font-family: "JetBrains Mono", monospace; font-size: 13px; font-weight: 600; color: #f8fafc; letter-spacing: -0.02em; }
+  .heat-count { font-size: 10px; color: rgba(226, 232, 240, 0.58); }
+  .heat-cell.is-empty { background: rgba(148, 163, 184, 0.035); border-style: dashed; }
+  .heat-cell.is-empty .heat-value { color: #475569; }
+
+  .tone-rose { color: #fda4af; }
+  .tone-amber { color: #fcd34d; }
+  .tone-teal { color: #5eead4; }
+  .tone-dot { width: 5px; height: 5px; border-radius: 999px; display: inline-block; }
+  .tone-rose .tone-dot { background: #fb7185; box-shadow: 0 0 10px rgba(251, 113, 133, 0.6); }
+  .tone-amber .tone-dot { background: #fbbf24; box-shadow: 0 0 10px rgba(251, 191, 36, 0.55); }
+  .tone-teal .tone-dot { background: #2dd4bf; box-shadow: 0 0 10px rgba(45, 212, 191, 0.55); }
+
+  .skeleton {
+    background: linear-gradient(90deg, #0c1524 25%, #13203a 37%, #0c1524 63%);
+    background-size: 400% 100%;
+    animation: shimmer 1.5s ease infinite;
+    border-radius: 10px;
+  }
+  @keyframes shimmer { 0% { background-position: 100% 0; } 100% { background-position: -100% 0; } }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .progress-bar {
+    position: fixed;
+    top: 0; left: 0;
+    height: 2px;
+    width: 0%;
+    z-index: 60;
+    background: linear-gradient(90deg, #2dd4bf, #818cf8, #fb7185);
+    opacity: 0;
+    transition: width 0.4s ease, opacity 0.3s ease;
+  }
+  .progress-bar.active { opacity: 1; }
+
+  ::-webkit-scrollbar { width: 9px; height: 9px; }
+  ::-webkit-scrollbar-track { background: #070c16; }
+  ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 999px; border: 2px solid #070c16; }
+  ::-webkit-scrollbar-thumb:hover { background: #334155; }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+  }
+</style>
+</head>
+
+<body class="min-h-screen font-sans text-slate-200 antialiased selection:bg-teal-400/25 selection:text-white">
+
+<div class="bg-grid pointer-events-none fixed inset-0 -z-10"></div>
+<div class="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
+  <div class="absolute -top-40 left-1/4 h-[520px] w-[520px] rounded-full bg-teal-500/[0.07] blur-[120px]"></div>
+  <div class="absolute -top-24 right-0 h-[420px] w-[420px] rounded-full bg-indigo-500/[0.09] blur-[120px]"></div>
+</div>
+
+<div id="progressBar" class="progress-bar"></div>
+
+<header class="sticky top-0 z-30 border-b border-white/[0.06] bg-[#060a13]/85 backdrop-blur-xl">
+  <div class="mx-auto flex h-16 max-w-[1440px] items-center justify-between gap-4 px-5 lg:px-8">
+    <div class="flex items-center gap-3">
+      <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-teal-400 via-cyan-400 to-indigo-500 shadow-[0_8px_24px_-8px_rgba(45,212,191,0.7)]">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#04121a" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M3 17l5-5 4 3 6-7" />
+          <path d="M18 8h3v3" />
+        </svg>
+      </div>
+      <div>
+        <p class="text-[13px] font-extrabold leading-none tracking-tight text-white">CreditRisk<span class="text-teal-300">.</span>lab</p>
+        <p class="mt-1 text-[9px] font-semibold uppercase tracking-[0.2em] text-slate-500">Portfolio intelligence</p>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-3 sm:gap-4">
+      <div class="hidden items-center gap-2 rounded-full border border-white/[0.07] bg-white/[0.03] px-3 py-1.5 sm:flex">
+        <span class="live-dot"></span>
+        <span class="text-[11px] font-semibold text-slate-300">Live</span>
+        <span class="text-slate-600">·</span>
+        <span id="updatedAt" class="font-mono text-[10px] text-slate-500">memuat…</span>
+      </div>
+      <button id="refreshBtn" class="icon-btn" type="button" title="Muat ulang data" aria-label="Muat ulang data">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M21 12a9 9 0 1 1-3-6.7L21 8" /><path d="M21 3v5h-5" />
+        </svg>
+      </button>
+    </div>
+  </div>
+</header>
+
+<main class="relative mx-auto max-w-[1440px] px-5 pb-14 pt-8 lg:px-8 lg:pt-10">
+
+  <!-- HERO -->
+  <section class="mb-8 flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+    <div class="max-w-2xl">
+      <div class="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.22em] text-teal-300/80">
+        <span class="h-px w-7 bg-gradient-to-r from-teal-400/80 to-transparent"></span>
+        Portfolio analytics · Credit risk
+      </div>
+      <h1 class="mt-3 text-3xl font-extrabold leading-[1.06] tracking-tight text-white sm:text-4xl lg:text-[42px]">
+        Credit Risk
+        <span class="bg-gradient-to-r from-teal-300 via-cyan-200 to-indigo-300 bg-clip-text text-transparent">Intelligence</span>
+      </h1>
+      <p class="mt-3 text-sm leading-relaxed text-slate-400">
+        Membaca <span class="font-semibold text-slate-200">32.409 pinjaman</span> untuk menemukan di mana risiko benar-benar menumpuk —
+        per grade, tujuan, beban cicilan, dan profil peminjam.
+      </p>
+    </div>
+
+    <div class="flex flex-wrap items-center gap-3">
+      <div class="flex items-center gap-3 rounded-2xl border border-white/[0.07] bg-[#0a111f]/80 px-4 py-3 shadow-card backdrop-blur">
+        <div id="riskIcon" class="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-400/10 text-amber-300 transition-colors">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+            <path d="M12 8v4" /><path d="M12 16h.01" />
+          </svg>
+        </div>
+        <div>
+          <p class="text-[9px] font-semibold uppercase tracking-[0.18em] text-slate-500">Portfolio risk</p>
+          <p class="mt-0.5 flex items-baseline gap-2">
+            <span id="riskLevel" class="text-sm font-bold text-white">—</span>
+            <span id="riskRate" class="font-mono text-[10px] text-slate-400">—</span>
+          </p>
+        </div>
+      </div>
+
+      <div class="hidden items-center gap-3 rounded-2xl border border-white/[0.07] bg-[#0a111f]/80 px-4 py-3 shadow-card backdrop-blur md:flex">
+        <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-teal-400/10 text-teal-300">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M3 3v18h18" /><path d="M7 15l4-5 3 3 5-7" />
+          </svg>
+        </div>
+        <div>
+          <p class="text-[9px] font-semibold uppercase tracking-[0.18em] text-slate-500">Sumber data</p>
+          <p id="sourceInfo" class="mt-0.5 text-[11px] font-medium text-slate-300">Google Sheets</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FILTER BAR -->
+  <section class="panel mb-5 p-4 sm:p-5" aria-label="Filter portofolio">
+    <div class="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
+      <div class="grid flex-1 grid-cols-1 gap-3 sm:grid-cols-3">
+        <div>
+          <label for="filterGrade" class="mb-1.5 block text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500">Loan grade</label>
+          <select id="filterGrade" class="select" aria-label="Filter loan grade">
+            <option value="ALL">Semua grade</option>
+          </select>
+        </div>
+        <div>
+          <label for="filterHome" class="mb-1.5 block text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500">Home ownership</label>
+          <select id="filterHome" class="select" aria-label="Filter status kepemilikan rumah">
+            <option value="ALL">Semua status</option>
+          </select>
+        </div>
+        <div>
+          <label for="filterIntent" class="mb-1.5 block text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500">Loan intent</label>
+          <select id="filterIntent" class="select" aria-label="Filter tujuan pinjaman">
+            <option value="ALL">Semua tujuan</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-between gap-3 xl:justify-end">
+        <p id="scopeText" class="text-[11px] leading-snug text-slate-500">Menampilkan seluruh portofolio</p>
+        <button id="resetBtn" type="button" disabled
+          class="inline-flex shrink-0 items-center gap-2 rounded-xl border border-white/[0.09] bg-white/[0.03] px-3.5 py-2 text-[11px] font-semibold text-slate-300 transition hover:border-teal-400/40 hover:bg-teal-400/[0.07] hover:text-white disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-white/[0.09] disabled:hover:bg-white/[0.03]">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M3 12a9 9 0 1 0 3-6.7L3 8" /><path d="M3 3v5h5" />
+          </svg>
+          Reset filter
+          <span id="activeCount" class="hidden rounded-md bg-teal-400/15 px-1.5 py-0.5 font-mono text-[9px] text-teal-200"></span>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ERROR -->
+  <div id="errorPanel" class="mb-5 hidden rounded-2xl border border-rose-500/25 bg-rose-500/[0.07] p-5">
+    <div class="flex items-start gap-3">
+      <div class="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-rose-500/15 text-rose-300">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
+        </svg>
+      </div>
+      <div class="min-w-0">
+        <p class="text-sm font-semibold text-rose-100">Data gagal dimuat</p>
+        <p id="errorText" class="mt-1 break-words text-xs leading-relaxed text-rose-200/80"></p>
+        <p class="mt-2 text-[11px] leading-relaxed text-rose-200/50">
+          Pastikan sheet <span class="font-mono">credit_risk_clean</span> tersedia, script terikat ke spreadsheet, dan deployment sudah diotorisasi.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- BOOT SKELETON -->
+  <div id="boot" aria-hidden="true">
+    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div class="panel h-[148px] p-5"><div class="skeleton h-9 w-9"></div><div class="skeleton mt-4 h-2.5 w-24"></div><div class="skeleton mt-3 h-7 w-36"></div><div class="skeleton mt-3 h-2 w-28"></div></div>
+      <div class="panel h-[148px] p-5"><div class="skeleton h-9 w-9"></div><div class="skeleton mt-4 h-2.5 w-28"></div><div class="skeleton mt-3 h-7 w-32"></div><div class="skeleton mt-3 h-2 w-24"></div></div>
+      <div class="panel h-[148px] p-5"><div class="skeleton h-9 w-9"></div><div class="skeleton mt-4 h-2.5 w-24"></div><div class="skeleton mt-3 h-7 w-24"></div><div class="skeleton mt-3 h-2 w-32"></div></div>
+      <div class="panel h-[148px] p-5"><div class="skeleton h-9 w-9"></div><div class="skeleton mt-4 h-2.5 w-28"></div><div class="skeleton mt-3 h-7 w-20"></div><div class="skeleton mt-3 h-2 w-24"></div></div>
+    </div>
+    <div class="mt-5 grid grid-cols-1 gap-5 xl:grid-cols-12">
+      <div class="panel h-[380px] p-5 xl:col-span-7"><div class="skeleton h-3 w-44"></div><div class="skeleton mt-6 h-[280px] w-full"></div></div>
+      <div class="panel h-[380px] p-5 xl:col-span-5"><div class="skeleton h-3 w-40"></div><div class="skeleton mt-6 h-[280px] w-full"></div></div>
+    </div>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div id="dashboard" class="hidden">
+
+    <!-- KPI -->
+    <section class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4" aria-label="Key performance indicators">
+      <article class="kpi relative overflow-hidden p-5" style="--glow: 45, 212, 191;">
+        <div class="relative flex items-start justify-between">
+          <span class="icon-box">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><path d="M14 2v6h6" /><path d="M8 13h8" /><path d="M8 17h5" />
+            </svg>
+          </span>
+          <span id="kpiLoansDelta" class="delta delta-neutral">—</span>
+        </div>
+        <p class="relative mt-4 text-[10px] font-bold uppercase tracking-[0.16em] text-slate-400">Total pinjaman</p>
+        <p id="kpiLoans" class="relative mt-1.5 font-mono text-[30px] font-semibold leading-none tracking-tight text-white tabular-nums">—</p>
+        <p id="kpiLoansMeta" class="relative mt-2 text-[11px] text-slate-500">Menunggu data…</p>
+      </article>
+
+      <article class="kpi relative overflow-hidden p-5" style="--glow: 129, 140, 248;">
+        <div class="relative flex items-start justify-between">
+          <span class="icon-box">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <line x1="12" y1="2" x2="12" y2="22" /><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+            </svg>
+          </span>
+          <span id="kpiPortfolioDelta" class="delta delta-neutral">—</span>
+        </div>
+        <p class="relative mt-4 text-[10px] font-bold uppercase tracking-[0.16em] text-slate-400">Total portofolio</p>
+        <p id="kpiPortfolio" class="relative mt-1.5 font-mono text-[30px] font-semibold leading-none tracking-tight text-white tabular-nums" title="">—</p>
+        <p id="kpiPortfolioMeta" class="relative mt-2 text-[11px] text-slate-500">Nilai pokok pinjaman</p>
+      </article>
+
+      <article class="kpi relative overflow-hidden p-5" style="--glow: 251, 113, 133;">
+        <div class="relative flex items-start justify-between">
+          <span class="icon-box">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" />
+            </svg>
+          </span>
+          <span id="kpiDefaultDelta" class="delta delta-neutral">—</span>
+        </div>
+        <p class="relative mt-4 text-[10px] font-bold uppercase tracking-[0.16em] text-slate-400">Default rate</p>
+        <p id="kpiDefault" class="relative mt-1.5 font-mono text-[30px] font-semibold leading-none tracking-tight text-white tabular-nums">—</p>
+        <p id="kpiDefaultMeta" class="relative mt-2 text-[11px] text-slate-500">Pinjaman gagal bayar</p>
+      </article>
+
+      <article class="kpi relative overflow-hidden p-5" style="--glow: 251, 191, 36;">
+        <div class="relative flex items-start justify-between">
+          <span class="icon-box">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <line x1="19" y1="5" x2="5" y2="19" /><circle cx="6.5" cy="6.5" r="2.5" /><circle cx="17.5" cy="17.5" r="2.5" />
+            </svg>
+          </span>
+          <span id="kpiRateDelta" class="delta delta-neutral">—</span>
+        </div>
+        <p class="relative mt-4 text-[10px] font-bold uppercase tracking-[0.16em] text-slate-400">Rata-rata suku bunga</p>
+        <p id="kpiRate" class="relative mt-1.5 font-mono text-[30px] font-semibold leading-none tracking-tight text-white tabular-nums">—</p>
+        <p id="kpiRateMeta" class="relative mt-2 text-[11px] text-slate-500">Tertimbang per pinjaman</p>
+      </article>
+    </section>
+
+    <!-- EMPTY STATE -->
+    <div id="emptyState" class="mt-5 hidden rounded-2xl border border-amber-400/20 bg-amber-400/[0.05] p-5 text-sm text-amber-100/90">
+      Tidak ada pinjaman yang cocok dengan kombinasi filter ini. Coba longgarkan salah satu filter atau tekan <span class="font-semibold">Reset filter</span>.
+    </div>
+
+    <!-- CHARTS -->
+    <div id="chartsGrid" class="mt-5 grid grid-cols-1 gap-5 xl:grid-cols-12">
+
+      <!-- 1. GRADE -->
+      <section class="panel p-5 xl:col-span-7">
+        <header class="flex items-start justify-between gap-4">
+          <div>
+            <h2 class="text-[15px] font-bold tracking-tight text-white">Default rate per loan grade</h2>
+            <p class="mt-1 text-[11px] leading-relaxed text-slate-500">Lonjakan tajam terjadi mulai Grade D — kualitas kredit bukan hubungan linear.</p>
+          </div>
+          <span class="shrink-0 rounded-lg border border-white/[0.08] bg-white/[0.03] px-2 py-1 font-mono text-[10px] text-slate-400">A → G</span>
+        </header>
+        <div class="chart-frame mt-5 h-[290px] sm:h-[310px]">
+          <canvas id="gradeChart" role="img" aria-label="Grafik batang default rate per loan grade"></canvas>
+        </div>
+        <div class="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-white/[0.05] pt-3">
+          <p class="text-[10px] text-slate-500">Garis putus-putus = default rate portofolio <span id="gradeBench" class="font-mono text-slate-400">—</span>.</p>
+          <div class="flex items-center gap-3 text-[10px] text-slate-500">
+            <span class="flex items-center gap-1.5"><span class="h-2 w-2 rounded-sm bg-teal-400"></span>Rendah</span>
+            <span class="flex items-center gap-1.5"><span class="h-2 w-2 rounded-sm bg-amber-400"></span>Sedang</span>
+            <span class="flex items-center gap-1.5"><span class="h-2 w-2 rounded-sm bg-rose-400"></span>Tinggi</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- 2. INTENT -->
+      <section class="panel p-5 xl:col-span-5">
+        <header class="flex items-start justify-between gap-4">
+          <div>
+            <h2 class="text-[15px] font-bold tracking-tight text-white">Default rate per tujuan pinjaman</h2>
+            <p class="mt-1 text-[11px] leading-relaxed text-slate-500">Diurutkan dari risiko tertinggi ke terendah.</p>
+          </div>
+          <span class="shrink-0 rounded-lg border border-white/[0.08] bg-white/[0.03] px-2 py-1 font-mono text-[10px] text-slate-400">6 intent</span>
+        </header>
+        <div class="chart-frame mt-5 h-[290px] sm:h-[310px]">
+          <canvas id="intentChart" role="img" aria-label="Grafik batang horizontal default rate per tujuan pinjaman"></canvas>
+        </div>
+        <div class="mt-4 border-t border-white/[0.05] pt-3">
+          <p id="intentNote" class="text-[10px] leading-relaxed text-slate-500">—</p>
+        </div>
+      </section>
+
+      <!-- 3. DTI -->
+      <section class="panel p-5 xl:col-span-5">
+        <header class="flex items-start justify-between gap-4">
+          <div>
+            <h2 class="text-[15px] font-bold tracking-tight text-white">Default rate per beban cicilan</h2>
+            <p class="mt-1 text-[11px] leading-relaxed text-slate-500">Loan-to-income (DTI) tier — titik bahaya di atas 30%.</p>
+          </div>
+          <span class="shrink-0 rounded-lg border border-rose-400/20 bg-rose-400/[0.07] px-2 py-1 font-mono text-[10px] text-rose-300">≥ 30%</span>
+        </header>
+        <div class="chart-frame mt-5 h-[290px] sm:h-[310px]">
+          <canvas id="dtiChart" role="img" aria-label="Grafik batang default rate per tier beban cicilan"></canvas>
+        </div>
+        <div class="mt-4 border-t border-white/[0.05] pt-3">
+          <p id="dtiNote" class="text-[10px] leading-relaxed text-slate-500">—</p>
+        </div>
+      </section>
+
+      <!-- 4. MATRIX -->
+      <section class="panel flex flex-col p-5 xl:col-span-7">
+        <header class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <h2 class="text-[15px] font-bold tracking-tight text-white">Matriks risiko peminjam</h2>
+            <p class="mt-1 text-[11px] leading-relaxed text-slate-500">Default rate per status rumah × kelompok pendapatan.</p>
+          </div>
+          <div class="shrink-0">
+            <div class="h-1.5 w-32 rounded-full bg-gradient-to-r from-teal-400/80 via-amber-400/85 to-rose-400/90"></div>
+            <div class="mt-1 flex justify-between font-mono text-[9px] text-slate-500"><span>0%</span><span>30%</span><span>60%+</span></div>
+          </div>
+        </header>
+        <div class="mt-5 overflow-x-auto pb-1">
+          <div id="matrixGrid" class="grid min-w-[520px] gap-1.5"></div>
+        </div>
+        <p class="mt-auto border-t border-white/[0.05] pt-3 text-[10px] leading-relaxed text-slate-500">
+          Angka besar = default rate · angka kecil = jumlah pinjaman. Sel bertanda <span class="font-mono text-slate-400">*</span> memiliki sampel &lt; 30 pinjaman.
+        </p>
+      </section>
+    </div>
+
+    <!-- TAKEAWAYS -->
+    <section id="takeaways" class="mt-5 grid grid-cols-1 gap-4 md:grid-cols-3" aria-label="Sinyal risiko utama"></section>
+
+    <!-- FOOTNOTE -->
+    <footer class="mt-8 border-t border-white/[0.06] pt-5">
+      <div class="flex flex-col gap-3 text-[10px] leading-relaxed text-slate-500 lg:flex-row lg:items-center lg:justify-between">
+        <p>
+          <span class="font-semibold text-slate-400">Metodologi.</span>
+          Default rate = pinjaman berstatus 1 ÷ total pinjaman pada segmen. Rata-rata suku bunga mengecualikan nilai 0/kosong.
+          Agregasi dihitung di server (Google Apps Script) dan di-cache 5 menit.
+        </p>
+        <p class="shrink-0 font-mono text-[10px] text-slate-600">
+          <span id="cacheBadge" class="hidden rounded bg-white/[0.04] px-1.5 py-0.5 text-slate-400">cache</span>
+          <span id="buildInfo">Apps Script · Chart.js · Tailwind</span>
+        </p>
+      </div>
+    </footer>
+  </div>
+</main>
+
+<noscript>
+  <div class="mx-auto max-w-3xl px-5 py-10 text-sm text-rose-300">Dashboard ini membutuhkan JavaScript untuk menampilkan visualisasi.</div>
+</noscript>
+
+<script>
+(function () {
+  'use strict';
+
+  /* =======================================================================
+   *  STATE & KONSTANTA
+   * ===================================================================== */
+
+  const state = {
+    filters: { grade: 'ALL', home: 'ALL', intent: 'ALL' },
+    data: null,
+    charts: {},
+    loading: false,
+    requestId: 0
+  };
+
+  const HOME_LABELS = {
+    RENT: 'Rent',
+    MORTGAGE: 'Mortgage',
+    OWN: 'Own',
+    OTHER: 'Other'
+  };
+
+  const INTENT_LABELS = {
+    DEBTCONSOLIDATION: 'Debt consolidation',
+    EDUCATION: 'Education',
+    HOMEIMPROVEMENT: 'Home improvement',
+    MEDICAL: 'Medical',
+    PERSONAL: 'Personal',
+    VENTURE: 'Venture'
+  };
+
+  const GRADE_LABELS = { A: 'Grade A', B: 'Grade B', C: 'Grade C', D: 'Grade D', E: 'Grade E', F: 'Grade F', G: 'Grade G' };
+
+  const DTI_LABELS = {
+    '<10%': '< 10%',
+    '10-19%': '10–19%',
+    '20-29%': '20–29%',
+    '30-39%': '30–39%',
+    '40%+': '≥ 40%'
+  };
+
+  const COLOR = {
+    teal: '#2dd4bf',
+    tealSoft: 'rgba(45, 212, 191, 0.85)',
+    amber: '#fbbf24',
+    amberSoft: 'rgba(251, 191, 36, 0.85)',
+    orange: '#fb923c',
+    rose: '#fb7185',
+    roseSoft: 'rgba(251, 113, 133, 0.85)',
+    indigo: '#818cf8',
+    grid: 'rgba(148, 163, 184, 0.08)',
+    tick: '#7c8ca3',
+    text: '#cbd5e1'
+  };
+
+  /* =======================================================================
+   *  FORMATTER
+   * ===================================================================== */
+
+  const nf0 = new Intl.NumberFormat('id-ID', { maximumFractionDigits: 0 });
+  const nf1 = new Intl.NumberFormat('id-ID', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+  const nf2 = new Intl.NumberFormat('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+  function pct(value, digits) {
+    const n = Number(value) || 0;
+    if (digits === 2) return nf2.format(n) + '%';
+    if (digits === 0) return nf0.format(Math.round(n)) + '%';
+    return nf1.format(n) + '%';
+  }
+
+  function num(value) {
+    return nf0.format(Number(value) || 0);
+  }
+
+  function moneyCompact(value) {
+    const n = Number(value) || 0;
+    if (n >= 1e9) return '$' + nf1.format(n / 1e9) + 'B';
+    if (n >= 1e6) return '$' + nf1.format(n / 1e6) + 'M';
+    if (n >= 1e3) return '$' + nf1.format(n / 1e3) + 'K';
+    return '$' + nf0.format(n);
+  }
+
+  function moneyFull(value) {
+    return '$' + num(value);
+  }
+
+  function esc(value) {
+    return String(value === null || value === undefined ? '' : value)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  function clamp(n, min, max) {
+    return Math.max(min, Math.min(max, n));
+  }
+
+  /* =======================================================================
+   *  CHART.JS GLOBAL SETUP
+   * ===================================================================== */
+
+  if (window.Chart) {
+    Chart.defaults.font.family = "'Plus Jakarta Sans', system-ui, sans-serif";
+    Chart.defaults.font.size = 11;
+    Chart.defaults.color = COLOR.tick;
+
+    Chart.register({
+      id: 'valueLabels',
+      afterDatasetsDraw: function (chart) {
+        if (chart.options.plugins && chart.options.plugins.valueLabels === false) return;
+        const meta = chart.getDatasetMeta(0);
+        if (!meta || !meta.data) return;
+        const ctx = chart.ctx;
+        const horizontal = chart.options.indexAxis === 'y';
+        const values = chart.data.datasets[0].data;
+
+        ctx.save();
+        ctx.font = "600 10.5px 'JetBrains Mono', monospace";
+        ctx.fillStyle = 'rgba(226, 232, 240, 0.92)';
+
+        meta.data.forEach(function (bar, index) {
+          const value = values[index];
+          if (value === null || value === undefined) return;
+          const label = pct(value, 1);
+          if (horizontal) {
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(label, bar.x + 8, bar.y);
+          } else {
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'bottom';
+            ctx.fillText(label, bar.x, bar.y - 6);
+          }
+        });
+        ctx.restore();
+      }
+    });
+  }
+
+  function tooltipBase(extra) {
+    return Object.assign({
+      backgroundColor: 'rgba(9, 15, 27, 0.96)',
+      borderColor: 'rgba(148, 163, 184, 0.18)',
+      borderWidth: 1,
+      titleColor: '#f8fafc',
+      titleFont: { family: "'Plus Jakarta Sans', sans-serif", size: 11, weight: '700' },
+      bodyColor: '#cbd5e1',
+      bodyFont: { family: "'JetBrains Mono', monospace", size: 10.5 },
+      padding: 11,
+      cornerRadius: 9,
+      displayColors: false,
+      caretSize: 5
+    }, extra || {});
+  }
+
+  function rateColor(rate) {
+    if (rate >= 45) return COLOR.rose;
+    if (rate >= 25) return COLOR.orange;
+    if (rate >= 15) return COLOR.amber;
+    return COLOR.teal;
+  }
+
+  function rateFill(rate) {
+    if (rate >= 45) return 'rgba(251, 113, 133, 0.82)';
+    if (rate >= 25) return 'rgba(251, 146, 60, 0.80)';
+    if (rate >= 15) return 'rgba(251, 191, 36, 0.78)';
+    return 'rgba(45, 212, 191, 0.78)';
+  }
+
+  function niceMax(maxRate) {
+    const padded = Math.max(10, maxRate * 1.22);
+    return Math.min(100, Math.ceil(padded / 10) * 10);
+  }
+
+  function destroyChart(key) {
+    if (state.charts[key]) {
+      state.charts[key].destroy();
+      delete state.charts[key];
+    }
+  }
+
+  /* =======================================================================
+   *  SERVER BRIDGE
+   * ===================================================================== */
+
+  function callServer(fn, payload) {
+    return new Promise(function (resolve, reject) {
+      if (typeof google === 'undefined' || !google.script || !google.script.run) {
+        reject(new Error('google.script.run tidak tersedia. Jalankan dashboard sebagai Web App Google Apps Script.'));
+        return;
+      }
+
+      const timer = setTimeout(function () {
+        reject(new Error('Server tidak merespons dalam 45 detik. Coba muat ulang halaman.'));
+      }, 45000);
+
+      google.script.run
+        .withSuccessHandler(function (result) {
+          clearTimeout(timer);
+          resolve(result);
+        })
+        .withFailureHandler(function (err) {
+          clearTimeout(timer);
+          reject(err instanceof Error ? err : new Error(String(err && err.message ? err.message : err)));
+        })[fn](payload);
+    });
+  }
+
+  /* =======================================================================
+   *  LOADING & ERROR
+   * ===================================================================== */
+
+  const progressBar = document.getElementById('progressBar');
+  const refreshBtn = document.getElementById('refreshBtn');
+  const selects = ['filterGrade', 'filterHome', 'filterIntent'].map(function (id) {
+    return document.getElementById(id);
+  });
+
+  function setLoading(isLoading) {
+    state.loading = isLoading;
+    document.getElementById('dashboard').classList.toggle('is-loading', isLoading);
+    refreshBtn.classList.toggle('spinning', isLoading);
+    selects.forEach(function (select) { select.disabled = isLoading; });
+
+    if (isLoading) {
+      progressBar.classList.add('active');
+      progressBar.style.width = '18%';
+      window.setTimeout(function () { progressBar.style.width = '72%'; }, 120);
+    } else {
+      progressBar.style.width = '100%';
+      window.setTimeout(function () {
+        progressBar.classList.remove('active');
+        progressBar.style.width = '0%';
+      }, 320);
+    }
+  }
+
+  function showError(message) {
+    document.getElementById('errorText').textContent = message;
+    document.getElementById('errorPanel').classList.remove('hidden');
+  }
+
+  function hideError() {
+    document.getElementById('errorPanel').classList.add('hidden');
+  }
+
+  /* =======================================================================
+   *  DATA LOADING
+   * ===================================================================== */
+
+  async function loadData() {
+    const requestId = ++state.requestId;
+    hideError();
+    setLoading(true);
+
+    try {
+      const data = await callServer('getDashboardData', state.filters);
+      if (requestId !== state.requestId) return;
+      if (!data || data.error) throw new Error((data && data.error) || 'Respons server kosong.');
+      state.data = data;
+      render(data);
+    } catch (err) {
+      if (requestId !== state.requestId) return;
+      showError(err && err.message ? err.message : 'Terjadi kesalahan tidak terduga.');
+      if (!state.data) {
+        document.getElementById('boot').classList.add('hidden');
+      }
+    } finally {
+      if (requestId === state.requestId) setLoading(false);
+    }
+  }
+
+  /* =======================================================================
+   *  RENDER UTAMA
+   * ===================================================================== */
+
+  function render(data) {
+    document.getElementById('boot').classList.add('hidden');
+    document.getElementById('dashboard').classList.remove('hidden');
+
+    populateFilters(data.options);
+    renderMeta(data);
+    renderScope(data);
+    renderRisk(data);
+    renderKpis(data);
+
+    const empty = !data.kpi || data.kpi.loans === 0;
+    document.getElementById('emptyState').classList.toggle('hidden', !empty);
+    document.getElementById('chartsGrid').classList.toggle('hidden', empty);
+    document.getElementById('takeaways').classList.toggle('hidden', empty);
+
+    if (empty) {
+      Object.keys(state.charts).forEach(destroyChart);
+      return;
+    }
+
+    renderGradeChart(data);
+    renderIntentChart(data);
+    renderDtiChart(data);
+    renderMatrix(data);
+    renderTakeaways(data);
+  }
+
+  function renderMeta(data) {
+    const meta = data.meta || {};
+    const date = meta.generatedAt ? new Date(meta.generatedAt) : new Date();
+    const time = date.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', timeZoneName: 'short' });
+    document.getElementById('updatedAt').textContent = time;
+    document.getElementById('sourceInfo').textContent = num(meta.sourceRows || data.baseline.loans) + ' baris · ' + (meta.sheetName || 'Sheets');
+    document.getElementById('cacheBadge').classList.toggle('hidden', !meta.cached);
+    document.getElementById('buildInfo').title = 'Agregasi ' + (meta.durationMs || 0) + ' ms';
+  }
+
+  function renderScope(data) {
+    const shown = data.kpi.loans;
+    const total = data.baseline.loans;
+    const share = total ? (shown / total) * 100 : 0;
+
+    document.getElementById('scopeText').innerHTML =
+      'Menampilkan <span class="font-semibold text-slate-300">' + num(shown) + '</span> dari ' +
+      num(total) + ' pinjaman · <span class="font-mono text-slate-400">' + pct(share, 1) + '</span> portofolio';
+
+    const count = [data.filters.grade, data.filters.home, data.filters.intent].filter(function (v) {
+      return v && v !== 'ALL';
+    }).length;
+
+    const badge = document.getElementById('activeCount');
+    badge.textContent = count;
+    badge.classList.toggle('hidden', count === 0);
+
+    const reset = document.getElementById('resetBtn');
+    reset.disabled = count === 0;
+  }
+
+  function renderRisk(data) {
+    const rate = data.kpi.defaultRate;
+    const level = document.getElementById('riskLevel');
+    const icon = document.getElementById('riskIcon');
+
+    if (!data.kpi.loans) {
+      level.textContent = 'Tidak ada data';
+      level.style.color = '#94a3b8';
+      document.getElementById('riskRate').textContent = '—';
+      icon.className = 'flex h-9 w-9 items-center justify-center rounded-xl bg-slate-400/10 text-slate-400 transition-colors';
+      return;
+    }
+
+    let label = 'Rendah';
+    let tone = 'teal';
+    let text = '#5eead4';
+
+    if (rate >= 30) { label = 'Ekstrem'; tone = 'rose'; text = '#fda4af'; }
+    else if (rate >= 18) { label = 'Tinggi'; tone = 'orange'; text = '#fdba74'; }
+    else if (rate >= 10) { label = 'Moderat'; tone = 'amber'; text = '#fcd34d'; }
+
+    level.textContent = label;
+    level.style.color = text;
+
+    document.getElementById('riskRate').textContent = pct(rate, 2);
+
+    icon.className = 'flex h-9 w-9 items-center justify-center rounded-xl transition-colors ' +
+      (tone === 'rose' ? 'bg-rose-400/10 text-rose-300' :
+        tone === 'orange' ? 'bg-orange-400/10 text-orange-300' :
+          tone === 'amber' ? 'bg-amber-400/10 text-amber-300' : 'bg-teal-400/10 text-teal-300');
+  }
+
+  function renderKpis(data) {
+    const kpi = data.kpi;
+    const base = data.baseline;
+    const active = data.filters.active;
+
+    animateNumber(document.getElementById('kpiLoans'), kpi.loans, num);
+    animateNumber(document.getElementById('kpiPortfolio'), kpi.portfolio, moneyCompact);
+    animateNumber(document.getElementById('kpiDefault'), kpi.defaultRate, function (v) { return pct(v, 2); });
+    animateNumber(document.getElementById('kpiRate'), kpi.avgRate, function (v) { return pct(v, 2); });
+
+    const portfolioEl = document.getElementById('kpiPortfolio');
+    portfolioEl.title = moneyFull(kpi.portfolio);
+
+    document.getElementById('kpiLoansMeta').textContent =
+      active ? num(kpi.loans) + ' dari ' + num(base.loans) + ' pinjaman' : 'Pinjaman dalam portofolio';
+    document.getElementById('kpiPortfolioMeta').textContent = moneyFull(kpi.portfolio) + ' nilai pokok';
+    document.getElementById('kpiDefaultMeta').textContent = num(kpi.defaults) + ' default · avg pinjaman ' + moneyCompact(kpi.avgLoan);
+    document.getElementById('kpiRateMeta').textContent =
+      kpi.loans === 0
+        ? 'Tidak ada pinjaman pada filter ini'
+        : data.coverage.rateMissing > 0
+          ? 'Excl. ' + num(data.coverage.rateMissing) + ' suku bunga kosong'
+          : 'Seluruh pinjaman memiliki suku bunga';
+
+    const loansDelta = document.getElementById('kpiLoansDelta');
+    const portfolioDelta = document.getElementById('kpiPortfolioDelta');
+    const defaultDelta = document.getElementById('kpiDefaultDelta');
+    const rateDelta = document.getElementById('kpiRateDelta');
+
+    if (kpi.loans === 0) {
+      setDelta(loansDelta, 'Tidak ada data', 'neutral');
+      setDelta(portfolioDelta, 'Tidak ada data', 'neutral');
+      setDelta(defaultDelta, 'Tidak ada data', 'neutral');
+      setDelta(rateDelta, 'Tidak ada data', 'neutral');
+      return;
+    }
+
+    if (!active) {
+      setDelta(loansDelta, 'Portofolio penuh', 'neutral');
+      setDelta(portfolioDelta, 'Baseline', 'neutral');
+      setDelta(defaultDelta, 'Baseline ' + pct(base.defaultRate, 2), 'neutral');
+      setDelta(rateDelta, 'Baseline ' + pct(base.avgRate, 2), 'neutral');
+      return;
+    }
+
+    const loansChange = base.loans ? ((kpi.loans - base.loans) / base.loans) * 100 : 0;
+    const portfolioChange = base.portfolio ? ((kpi.portfolio - base.portfolio) / base.portfolio) * 100 : 0;
+    const defaultChange = kpi.defaultRate - base.defaultRate;
+    const rateChange = kpi.avgRate - base.avgRate;
+
+    setDelta(loansDelta, arrow(loansChange) + ' ' + pct(Math.abs(loansChange), 1) + ' vs total', 'neutral');
+    setDelta(portfolioDelta, arrow(portfolioChange) + ' ' + pct(Math.abs(portfolioChange), 1) + ' vs total', 'neutral');
+    setDelta(defaultDelta, signedPp(defaultChange), defaultChange > 0.25 ? 'bad' : defaultChange < -0.25 ? 'good' : 'neutral');
+    setDelta(rateDelta, signedPp(rateChange), rateChange > 0.1 ? 'bad' : rateChange < -0.1 ? 'good' : 'neutral');
+  }
+
+  function arrow(change) {
+    if (change > 0.05) return '▲';
+    if (change < -0.05) return '▼';
+    return '•';
+  }
+
+  function signedPp(change) {
+    const sign = change > 0 ? '+' : change < 0 ? '−' : '';
+    return sign + pct(Math.abs(change), 2) + ' pp';
+  }
+
+  function setDelta(el, text, tone) {
+    el.textContent = text;
+    el.className = 'delta delta-' + tone;
+  }
+
+  function animateNumber(el, target, formatter) {
+    const from = Number(el.dataset.value || 0);
+    const to = Number(target) || 0;
+    el.dataset.value = String(to);
+
+    if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      el.textContent = formatter(to);
+      return;
+    }
+
+    const duration = 650;
+    const start = performance.now();
+
+    function tick(now) {
+      const t = clamp((now - start) / duration, 0, 1);
+      const eased = 1 - Math.pow(1 - t, 3);
+      el.textContent = formatter(from + (to - from) * eased);
+      if (t < 1) requestAnimationFrame(tick);
+      else el.textContent = formatter(to);
+    }
+
+    requestAnimationFrame(tick);
+  }
+
+  /* =======================================================================
+   *  FILTER
+   * ===================================================================== */
+
+  function populateFilters(options) {
+    if (!options) return;
+    fillSelect('filterGrade', options.grades, GRADE_LABELS, 'Semua grade');
+    fillSelect('filterHome', options.homes, HOME_LABELS, 'Semua status');
+    fillSelect('filterIntent', options.intents, INTENT_LABELS, 'Semua tujuan');
+  }
+
+  function fillSelect(id, values, labels, allLabel) {
+    const select = document.getElementById(id);
+    const current = select.value || 'ALL';
+    select.innerHTML = '<option value="ALL">' + esc(allLabel) + '</option>' +
+      (values || []).map(function (value) {
+        const label = labels && labels[value] ? labels[value] : value;
+        return '<option value="' + esc(value) + '">' + esc(label) + '</option>';
+      }).join('');
+    select.value = current;
+  }
+
+  function initFilters() {
+    const map = { filterGrade: 'grade', filterHome: 'home', filterIntent: 'intent' };
+
+    Object.keys(map).forEach(function (id) {
+      document.getElementById(id).addEventListener('change', function (event) {
+        state.filters[map[id]] = event.target.value;
+        loadData();
+      });
+    });
+
+    document.getElementById('resetBtn').addEventListener('click', function () {
+      if (state.filters.grade === 'ALL' && state.filters.home === 'ALL' && state.filters.intent === 'ALL') return;
+      state.filters = { grade: 'ALL', home: 'ALL', intent: 'ALL' };
+      document.getElementById('filterGrade').value = 'ALL';
+      document.getElementById('filterHome').value = 'ALL';
+      document.getElementById('filterIntent').value = 'ALL';
+      loadData();
+    });
+
+    refreshBtn.addEventListener('click', function () {
+      if (!state.loading) loadData();
+    });
+  }
+
+  /* =======================================================================
+   *  CHART 1 — DEFAULT RATE PER GRADE
+   * ===================================================================== */
+
+  function renderGradeChart(data) {
+    destroyChart('grade');
+    const canvas = document.getElementById('gradeChart');
+    if (!canvas) return;
+
+    const rows = data.grade;
+    const labels = rows.map(function (r) { return r.key; });
+    const rates = rows.map(function (r) { return r.rate; });
+    const max = niceMax(Math.max.apply(null, rates.concat([data.kpi.defaultRate])));
+
+    const annotations = {};
+    if (Chart.registry.plugins.get('annotation')) {
+      annotations.benchmark = {
+        type: 'line',
+        yMin: data.kpi.defaultRate,
+        yMax: data.kpi.defaultRate,
+        borderColor: 'rgba(203, 213, 225, 0.40)',
+        borderWidth: 1,
+        borderDash: [5, 5]
+      };
+    }
+
+    document.getElementById('gradeBench').textContent = pct(data.kpi.defaultRate, 2);
+
+    state.charts.grade = new Chart(canvas.getContext('2d'), {
+      type: 'bar',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: 'Default rate',
+          data: rates,
+          backgroundColor: rates.map(rateFill),
+          borderColor: rates.map(rateColor),
+          borderWidth: 1,
+          borderRadius: 7,
+          borderSkipped: false,
+          barPercentage: 0.62,
+          categoryPercentage: 0.8,
+          maxBarThickness: 72
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        layout: { padding: { top: 22, right: 6, bottom: 0, left: 0 } },
+        animation: { duration: 650, easing: 'easeOutQuart' },
+        plugins: {
+          legend: { display: false },
+          tooltip: tooltipBase({
+            callbacks: {
+              title: function (items) { return 'Grade ' + items[0].label; },
+              label: function (ctx) {
+                const row = rows[ctx.dataIndex];
+                return [
+                  'Default rate: ' + pct(row.rate, 2),
+                  'Pinjaman: ' + num(row.loans),
+                  'Default: ' + num(row.defaults),
+                  'Nilai: ' + moneyCompact(row.amount)
+                ];
+              }
+            }
+          }),
+          annotation: { annotations: annotations }
+        },
+        scales: {
+          x: {
+            grid: { display: false },
+            border: { display: false },
+            ticks: { color: COLOR.text, font: { family: "'JetBrains Mono', monospace", size: 11, weight: '600' } }
+          },
+          y: {
+            beginAtZero: true,
+            max: max,
+            border: { display: false },
+            grid: { color: COLOR.grid },
+            ticks: { color: COLOR.tick, font: { size: 10 }, callback: function (v) { return v + '%'; } }
+          }
+        }
+      }
+    });
+  }
+
+  /* =======================================================================
+   *  CHART 2 — DEFAULT RATE PER INTENT
+   * ===================================================================== */
+
+  function renderIntentChart(data) {
+    destroyChart('intent');
+    const canvas = document.getElementById('intentChart');
+    if (!canvas) return;
+
+    const rows = data.intent.slice().sort(function (a, b) { return b.rate - a.rate; });
+    const labels = rows.map(function (r) { return INTENT_LABELS[r.key] || r.key; });
+    const rates = rows.map(function (r) { return r.rate; });
+    const max = niceMax(Math.max.apply(null, rates.concat([data.kpi.defaultRate])));
+
+    const annotations = {};
+    if (Chart.registry.plugins.get('annotation')) {
+      annotations.benchmark = {
+        type: 'line',
+        xMin: data.kpi.defaultRate,
+        xMax: data.kpi.defaultRate,
+        borderColor: 'rgba(203, 213, 225, 0.35)',
+        borderWidth: 1,
+        borderDash: [4, 4]
+      };
+    }
+
+    state.charts.intent = new Chart(canvas.getContext('2d'), {
+      type: 'bar',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: 'Default rate',
+          data: rates,
+          backgroundColor: rates.map(rateFill),
+          borderColor: rates.map(rateColor),
+          borderWidth: 1,
+          borderRadius: 6,
+          borderSkipped: false,
+          barPercentage: 0.68,
+          categoryPercentage: 0.82,
+          maxBarThickness: 34
+        }]
+      },
+      options: {
+        indexAxis: 'y',
+        responsive: true,
+        maintainAspectRatio: false,
+        layout: { padding: { top: 6, right: 48, bottom: 0, left: 0 } },
+        animation: { duration: 650, easing: 'easeOutQuart' },
+        plugins: {
+          legend: { display: false },
+          tooltip: tooltipBase({
+            callbacks: {
+              title: function (items) { return items[0].label; },
+              label: function (ctx) {
+                const row = rows[ctx.dataIndex];
+                return [
+                  'Default rate: ' + pct(row.rate, 2),
+                  'Pinjaman: ' + num(row.loans),
+                  'Default: ' + num(row.defaults)
+                ];
+              }
+            }
+          }),
+          annotation: { annotations: annotations }
+        },
+        scales: {
+          x: {
+            beginAtZero: true,
+            max: max,
+            border: { display: false },
+            grid: { color: COLOR.grid },
+            ticks: { color: COLOR.tick, font: { size: 10 }, callback: function (v) { return v + '%'; } }
+          },
+          y: {
+            grid: { display: false },
+            border: { display: false },
+            ticks: { color: COLOR.text, font: { size: 10.5, weight: '600' } }
+          }
+        }
+      }
+    });
+
+    if (rows.length) {
+      const top = rows[0];
+      const bottom = rows[rows.length - 1];
+      document.getElementById('intentNote').innerHTML =
+        '<span class="text-slate-400">' + esc(INTENT_LABELS[top.key] || top.key) + '</span> mencatat default ' +
+        '<span class="font-mono text-rose-300">' + pct(top.rate, 1) + '</span>, sedangkan ' +
+        '<span class="text-slate-400">' + esc(INTENT_LABELS[bottom.key] || bottom.key) + '</span> hanya ' +
+        '<span class="font-mono text-teal-300">' + pct(bottom.rate, 1) + '</span>.';
+    }
+  }
+
+  /* =======================================================================
+   *  CHART 3 — DEFAULT RATE PER DTI TIER
+   * ===================================================================== */
+
+  function renderDtiChart(data) {
+    destroyChart('dti');
+    const canvas = document.getElementById('dtiChart');
+    if (!canvas) return;
+
+    const rows = data.dti;
+    const labels = rows.map(function (r) { return DTI_LABELS[r.key] || r.key; });
+    const rates = rows.map(function (r) { return r.rate; });
+    const max = niceMax(Math.max.apply(null, rates.concat([data.kpi.defaultRate])));
+
+    const annotations = {};
+    if (Chart.registry.plugins.get('annotation')) {
+      annotations.danger = {
+        type: 'box',
+        xMin: 2.5,
+        xMax: rows.length - 0.5,
+        yMin: 0,
+        yMax: max,
+        backgroundColor: 'rgba(251, 113, 133, 0.055)',
+        borderColor: 'rgba(251, 113, 133, 0.20)',
+        borderWidth: 1,
+        borderDash: [4, 4]
+      };
+      annotations.benchmark = {
+        type: 'line',
+        yMin: data.kpi.defaultRate,
+        yMax: data.kpi.defaultRate,
+        borderColor: 'rgba(203, 213, 225, 0.32)',
+        borderWidth: 1,
+        borderDash: [5, 5]
+      };
+    }
+
+    state.charts.dti = new Chart(canvas.getContext('2d'), {
+      type: 'bar',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: 'Default rate',
+          data: rates,
+          backgroundColor: rates.map(rateFill),
+          borderColor: rates.map(rateColor),
+          borderWidth: 1,
+          borderRadius: 6,
+          borderSkipped: false,
+          barPercentage: 0.64,
+          categoryPercentage: 0.82,
+          maxBarThickness: 64
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        layout: { padding: { top: 22, right: 4, bottom: 0, left: 0 } },
+        animation: { duration: 650, easing: 'easeOutQuart' },
+        plugins: {
+          legend: { display: false },
+          tooltip: tooltipBase({
+            callbacks: {
+              title: function (items) { return 'DTI ' + items[0].label; },
+              label: function (ctx) {
+                const row = rows[ctx.dataIndex];
+                return [
+                  'Default rate: ' + pct(row.rate, 2),
+                  'Pinjaman: ' + num(row.loans),
+                  'Default: ' + num(row.defaults)
+                ];
+              }
+            }
+          }),
+          annotation: { annotations: annotations }
+        },
+        scales: {
+          x: {
+            grid: { display: false },
+            border: { display: false },
+            ticks: { color: COLOR.text, font: { family: "'JetBrains Mono', monospace", size: 10, weight: '600' } }
+          },
+          y: {
+            beginAtZero: true,
+            max: max,
+            border: { display: false },
+            grid: { color: COLOR.grid },
+            ticks: { color: COLOR.tick, font: { size: 10 }, callback: function (v) { return v + '%'; } }
+          }
+        }
+      }
+    });
+
+    const low = findTier(rows, '20-29%');
+    const high = findTier(rows, '30-39%');
+    if (low && high) {
+      document.getElementById('dtiNote').innerHTML =
+        'Tipping point: default melompat dari <span class="font-mono text-amber-300">' + pct(low.rate, 1) +
+        '</span> (20–29%) menjadi <span class="font-mono text-rose-300">' + pct(high.rate, 1) +
+        '</span> (30–39%) — ' + nf1.format(high.rate / Math.max(low.rate, 0.01)) + '× lebih tinggi.';
+    } else {
+      document.getElementById('dtiNote').textContent = 'Default rate naik tajam ketika beban cicilan melewati 30% pendapatan.';
+    }
+  }
+
+  function findTier(rows, key) {
+    for (let i = 0; i < rows.length; i++) if (rows[i].key === key) return rows[i];
+    return null;
+  }
+
+  /* =======================================================================
+   *  CHART 4 — RISK MATRIX (HEATMAP)
+   * ===================================================================== */
+
+  function renderMatrix(data) {
+    const wrap = document.getElementById('matrixGrid');
+    if (!wrap) return;
+
+    const homes = data.matrix.homes;
+    const bands = data.matrix.bands;
+    const lookup = {};
+    data.matrix.cells.forEach(function (cell) {
+      lookup[cell.home + '|' + cell.band] = cell;
+    });
+
+    const maxRate = data.matrix.cells.reduce(function (acc, cell) {
+      return Math.max(acc, cell.rate);
+    }, 0);
+    const scale = Math.max(30, Math.min(60, Math.ceil(maxRate / 10) * 10));
+
+    wrap.style.gridTemplateColumns = 'minmax(74px, 92px) repeat(' + bands.length + ', minmax(58px, 1fr))';
+
+    let html = '<div></div>';
+    bands.forEach(function (band) {
+      html += '<div class="pb-1 text-center text-[9px] font-semibold uppercase tracking-[0.08em] text-slate-500">' + esc(band) + '</div>';
+    });
+
+    homes.forEach(function (home) {
+      html += '<div class="flex items-center pr-2 text-[10px] font-bold uppercase tracking-[0.08em] text-slate-400">' +
+        esc(HOME_LABELS[home] || home) + '</div>';
+
+      bands.forEach(function (band) {
+        const cell = lookup[home + '|' + band];
+        if (!cell || !cell.loans) {
+          html += '<div class="heat-cell is-empty"><span class="heat-value">–</span><span class="heat-count">0</span></div>';
+          return;
+        }
+
+        const color = heatColor(cell.rate, scale);
+        const smallSample = cell.loans < 30;
+        const title = (HOME_LABELS[home] || home) + ' · ' + band + ' — ' +
+          num(cell.loans) + ' pinjaman, ' + num(cell.defaults) + ' default (' + pct(cell.rate, 1) + ')';
+
+        html += '<div class="heat-cell" style="background:' + color + ';border-color:rgba(255,255,255,0.07)" title="' + esc(title) + '">' +
+          '<span class="heat-value">' + pct(cell.rate, 1) + '</span>' +
+          '<span class="heat-count">' + num(cell.loans) + (smallSample ? '<span class="text-amber-300/80">*</span>' : '') + '</span>' +
+          '</div>';
+      });
+    });
+
+    wrap.innerHTML = html;
+  }
+
+  function heatColor(rate, scale) {
+    const t = clamp(rate / (scale || 60), 0, 1);
+    const stops = [
+      { at: 0, rgb: [45, 212, 191] },
+      { at: 0.55, rgb: [251, 191, 36] },
+      { at: 1, rgb: [251, 113, 133] }
+    ];
+
+    let from = stops[0];
+    let to = stops[stops.length - 1];
+
+    for (let i = 0; i < stops.length - 1; i++) {
+      if (t >= stops[i].at && t <= stops[i + 1].at) {
+        from = stops[i];
+        to = stops[i + 1];
+        break;
+      }
+    }
+
+    const local = (t - from.at) / Math.max(to.at - from.at, 0.0001);
+    const rgb = from.rgb.map(function (channel, index) {
+      return Math.round(channel + (to.rgb[index] - channel) * local);
+    });
+
+    const alpha = 0.10 + t * 0.60;
+    return 'rgba(' + rgb.join(',') + ',' + alpha.toFixed(3) + ')';
+  }
+
+  /* =======================================================================
+   *  TAKEAWAYS
+   * ===================================================================== */
+
+  function renderTakeaways(data) {
+    const wrap = document.getElementById('takeaways');
+    const items = [];
+
+    const grades = data.grade.filter(function (g) { return g.loans >= 30; });
+    const worstGrade = grades.slice().sort(function (a, b) { return b.rate - a.rate; })[0];
+    if (worstGrade) {
+      const ratio = data.baseline.defaultRate ? worstGrade.rate / data.baseline.defaultRate : 0;
+      items.push({
+        tone: worstGrade.rate >= 45 ? 'rose' : 'amber',
+        kicker: 'Grade ' + worstGrade.key,
+        title: 'Default ' + pct(worstGrade.rate, 1),
+        body: num(worstGrade.loans) + ' pinjaman Grade ' + worstGrade.key + ' mencatat ' + num(worstGrade.defaults) +
+          ' gagal bayar — ' + nf1.format(ratio) + '× rata-rata portofolio.'
+      });
+    }
+
+    const low = findTier(data.dti, '20-29%');
+    const high = findTier(data.dti, '30-39%');
+    const tippingValid = low && high && low.loans >= 30 && high.loans >= 30 && high.rate > low.rate + 1;
+
+    if (tippingValid) {
+      items.push({
+        tone: 'amber',
+        kicker: 'Tipping point DTI',
+        title: pct(low.rate, 1) + ' → ' + pct(high.rate, 1),
+        body: 'Default rate melompat ' + nf1.format(high.rate / Math.max(low.rate, 0.01)) +
+          '× saat beban cicilan melewati 30% dari pendapatan bulanan.'
+      });
+    } else if (data.intent.length >= 2) {
+      const top = data.intent[0];
+      const bottom = data.intent[data.intent.length - 1];
+      items.push({
+        tone: 'amber',
+        kicker: 'Tujuan pinjaman',
+        title: pct(top.rate, 1) + ' vs ' + pct(bottom.rate, 1),
+        body: (INTENT_LABELS[top.key] || top.key) + ' mencatat default tertinggi, ' +
+          nf1.format(top.rate / Math.max(bottom.rate, 0.01)) + '× ' + (INTENT_LABELS[bottom.key] || bottom.key) + '.'
+      });
+    }
+
+    let pool = data.matrix.cells.filter(function (c) { return c.loans >= 100; });
+    if (!pool.length) pool = data.matrix.cells.filter(function (c) { return c.loans >= 30; });
+    if (!pool.length) pool = data.matrix.cells.filter(function (c) { return c.loans > 0; });
+
+    const worstCell = pool.slice().sort(function (a, b) { return b.rate - a.rate; })[0];
+    if (worstCell) {
+      const small = worstCell.loans < 30;
+      items.push({
+        tone: 'rose',
+        kicker: (HOME_LABELS[worstCell.home] || worstCell.home) + ' · ' + worstCell.band,
+        title: 'Default ' + pct(worstCell.rate, 1),
+        body: 'Segmen ini menampung ' + num(worstCell.loans) + ' pinjaman dengan ' + num(worstCell.defaults) +
+          ' default — ' + (small
+            ? 'sampel masih kecil, interpretasikan dengan hati-hati.'
+            : 'konsentrasi risiko tertinggi di matriks.')
+      });
+    }
+
+    if (items.length < 3 && data.filters.active) {
+      const change = data.kpi.defaultRate - data.baseline.defaultRate;
+      items.push({
+        tone: change > 0 ? 'rose' : 'teal',
+        kicker: 'Filter aktif',
+        title: signedPp(change) + ' vs portofolio',
+        body: 'Slice ini memuat ' + num(data.kpi.loans) + ' pinjaman (' + pct(data.baseline.loans ? (data.kpi.loans / data.baseline.loans) * 100 : 0, 1) +
+          ' dari total) dengan default rate ' + pct(data.kpi.defaultRate, 2) + '.'
+      });
+    }
+
+    wrap.innerHTML = items.slice(0, 3).map(function (item) {
+      return '<article class="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-5 transition hover:border-white/[0.12] hover:bg-white/[0.03]">' +
+        '<div class="flex items-center gap-2 text-[9px] font-bold uppercase tracking-[0.16em] tone-' + item.tone + '">' +
+        '<span class="tone-dot"></span>' + esc(item.kicker) + '</div>' +
+        '<p class="mt-2 text-[15px] font-bold tracking-tight text-white">' + esc(item.title) + '</p>' +
+        '<p class="mt-1.5 text-[11px] leading-relaxed text-slate-400">' + esc(item.body) + '</p>' +
+        '</article>';
+    }).join('');
+  }
+
+  /* =======================================================================
+   *  BOOT
+   * ===================================================================== */
+
+  document.addEventListener('DOMContentLoaded', function () {
+    initFilters();
+    loadData();
+  });
+})();
+</script>
+</body>
+</html>
+
