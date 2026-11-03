@@ -108,7 +108,7 @@ credit-risk-analysis/
 │   ├── Code.gs             # Logika server dashboard
 │   └── index.html          # Tampilan dashboard
 ├── dashboard/
-│   └── screenshot.png      # Tangkapan layar dashboard
+│   └── screenshoot_dashboard.jpg   # Tangkapan layar dashboard
 └── docs/
     └── kesimpulan_bisnis.md# Laporan analitis & rekomendasi
 ```
@@ -122,7 +122,7 @@ Dashboard dipublikasikan sebagai web app Google Apps Script dan dapat diakses me
 
 > Halaman pertama dapat memuat beberapa detik, dan Google menampilkan banner peringatan standar untuk web app Apps Script.
 
-[![Credit Risk Dashboard](dashboard/screenshot.png)](dashboard/screenshot.png)
+[![Credit Risk Dashboard](dashboard/screenshoot_dashboard.jpg)](dashboard/screenshoot_dashboard.jpg)
 
 ### 📌 Ringkasan KPI Utama
 
