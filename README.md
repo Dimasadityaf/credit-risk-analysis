@@ -120,8 +120,6 @@ Dashboard dipublikasikan sebagai web app Google Apps Script dan dapat diakses me
 
 🔗 **[Live Interactive Dashboard](https://script.google.com/macros/s/AKfycbwSGJd_832tYZGm54wd8xQxUyfNdPzLAdk5XQUvCJAqzAyEFAvOEM24zw1tQFHDLPn7/exec)**
 
-> Halaman pertama dapat memuat beberapa detik, dan Google menampilkan banner peringatan standar untuk web app Apps Script.
-
 [![Credit Risk Dashboard](dashboard/screenshoot_dashboard.jpg)](dashboard/screenshoot_dashboard.jpg)
 
 ### 📌 Ringkasan KPI Utama
