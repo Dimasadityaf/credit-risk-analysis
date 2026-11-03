@@ -1,5 +1,6 @@
 data_raw/
 data/*.db
+data/stability_check.json
 __pycache__/
 .ipynb_checkpoints/
 .env

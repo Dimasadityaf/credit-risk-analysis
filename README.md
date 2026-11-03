@@ -94,11 +94,13 @@ Data kosong tidak diisi dengan rata-rata karena dapat menyesatkan hasil analisis
 credit-risk-analysis/
 ├── README.md               # Ringkasan portofolio & temuan bisnis
 ├── .gitignore              # Konfigurasi proteksi data mentah & lokal
+├── requirements.txt        # Dependensi Python (pandas)
 ├── data/
 │   ├── credit_risk_clean.csv   # Dataset bersih
 │   └── data_dictionary.csv     # Kamus data format CSV
 ├── scripts/
-│   └── clean_data.py       # Skrip pembersihan & pembentukan database SQLite
+│   ├── clean_data.py       # Skrip pembersihan & pembentukan database SQLite
+│   └── stability_check.py  # Uji stabilitas temuan (train/test split)
 ├── sql/
 │   ├── level1_dasar.sql
 │   ├── level2_segmentasi.sql
@@ -110,7 +112,8 @@ credit-risk-analysis/
 │   │   └── index.html          # Tampilan dashboard
 │   └── screenshoot_dashboard.jpg   # Tangkapan layar dashboard
 └── docs/
-    └── kesimpulan_bisnis.md    # Laporan analitis & rekomendasi
+    ├── kesimpulan_bisnis.md    # Laporan analitis & rekomendasi
+    └── uji_stabilitas.md       # Hasil uji train/test split (Fase 6)
 ```
 
 
@@ -136,23 +139,21 @@ Dashboard dipublikasikan sebagai web app Google Apps Script dan dapat diakses me
 3. **Gagal Bayar per Kelompok Pendapatan** – Pendapatan <30k paling berisiko (47,2%), sedangkan 100k+ paling aman (8,95%).
 4. **Gagal Bayar per Status Rumah** – Peminjang yang menyewa (RENT) memiliki risiko 31,61%, jauh lebih tinggi dari pemilik rumah (OWN) 7,49%.
 
-<!--
-==============================================================
-TAMBAHKAN BAGIAN INI SETELAH FASE 5 (KESIMPULAN BISNIS SELESAI).
-==============================================================
-
 * * *
 
 ## 📑 Sintesis Analitis & Rekomendasi Bisnis
 
 Laporan lengkap: 👉 [**Kesimpulan Bisnis & Rekomendasi (docs/kesimpulan_bisnis.md)**](docs/kesimpulan_bisnis.md)
 
-- **Temuan 1**: ISI (temuan, angka, rekomendasi)
-- **Temuan 2**: ISI
-- **Temuan 3**: ISI
-- **Temuan 4**: ISI
-- **Temuan 5**: ISI
--->
+- **Temuan 1 — Grade adalah pemisah terkuat**: default rate naik dari 9,96% (grade A) ke 98,44% (grade G), dengan "tepi jurang" antara grade C (20,76%) dan grade D (59,05%). Grade D–G hanya 15% portofolio tetapi menyumbang **42,2% seluruh gagal bayar**.
+- **Temuan 2 — LTI adalah pengungkit risiko kedua**: risiko melonjak dari 21,56% ke 39,52% tepat di titik **LTI 30%**; di atas 30% mayoritas pinjaman gagal bayar (61,93% pada bin 30–40%).
+- **Temuan 3 — Riwayat gagal bayar melipatgandakan risiko 2x**: 37,86% (pernah gagal) vs 18,44% (belum pernah), dan berlaku konsisten di semua grade.
+- **Temuan 4 — Segmen RENT + pendapatan <30k adalah titik terpanas**: default rate **54,39%** — 4,2x lebih tinggi dari pemilik rumah (7,49%).
+- **Temuan 5 — Suku bunga belum mengkompensasi risiko**: grade D–G membebankan bunga 15–20% tetapi default rate-nya 59–98%; kenaikan bunga tidak menutup probabilitas rugi.
+
+**Rekomendasi prioritas** (9 rekomendasi lengkap di laporan): tegakkan batas **LTI maksimal 30%**, tinjau ulang penyaluran **grade D–G**, wajibkan verifikasi ekstra untuk **RENT + <30k**, dan gunakan **skor risiko gabungan** (grade + riwayat gagal + LTI) untuk *risk-based pricing*.
+
+> **Uji stabilitas (Fase 6):** seluruh temuan di atas diuji ulang dengan *train/test split* 70/30 — **14 dari 15 metrik kunci terbukti stabil**, termasuk selisih LTI (~50 poin) dan rasio riwayat gagal (2,0x). Rincian di [**docs/uji_stabilitas.md**](docs/uji_stabilitas.md).
 
 * * *
 
@@ -183,6 +184,14 @@ Laporan lengkap: 👉 [**Kesimpulan Bisnis & Rekomendasi (docs/kesimpulan_bisnis
    - `sql/level3_cte_subquery.sql`
    - `sql/level4_window_function.sql`
 
+5. **Uji Stabilitas Temuan** (opsional):
+
+   ```
+   python scripts/stability_check.py
+   ```
+
+   *Membagi data 70/30 (seed tetap) dan membandingkan metrik kunci. Hasil yang diharapkan: 14 dari 15 metrik stabil — lihat [`docs/uji_stabilitas.md`](docs/uji_stabilitas.md).*
+
 * * *
 
 ## 📈 Alur Kerja Proyek
@@ -193,4 +202,4 @@ Laporan lengkap: 👉 [**Kesimpulan Bisnis & Rekomendasi (docs/kesimpulan_bisnis
 - ✅ **Fase 3: Eksplorasi & Analisis Data Menggunakan SQL (Level 1-4)**
 - ✅ **Fase 4: Perancangan Dashboard Interaktif (Google Apps Script)**
 - ✅ **Fase 5: Sintesis Temuan & Rekomendasi Bisnis**
-- ⬜ **Fase 6: Finalisasi & Publikasi Portofolio**
+- ✅ **Fase 6: Finalisasi & Publikasi Portofolio**

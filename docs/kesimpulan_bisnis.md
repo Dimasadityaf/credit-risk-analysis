@@ -173,7 +173,7 @@ Riwayat gagal bayar **melipatgandakan risiko ~2x lipat** — dan berlaku di semu
 5. **Suku bunga kosong pada 3.094 baris dan masa kerja kosong pada 887 baris** sengaja tidak diimputasi; hasil rata-rata dihitung dari baris terisi.
 6. **Belum ada validasi data luar** — temuan perlu diuji pada portofolio baru sebelum dijadikan kebijakan produksi.
 
-**Langkah lanjutan (masuk Fase 6):** uji stabilitan temuan dengan train/test split sederhana, lalu dokumentasikan laporan ini di README dan publikasikan portofolio.
+**Langkah lanjutan (Fase 6 — selesai):** uji stabilitas temuan dengan *train/test split* 70/30 dilakukan di [`scripts/stability_check.py`](../scripts/stability_check.py) — **14 dari 15 metrik kunci terbukti stabil** (hanya grade E yang menyimpang karena sampel kecil). Hasil lengkap: [`docs/uji_stabilitas.md`](uji_stabilitas.md). Laporan ini juga sudah didokumentasikan di README dan portofolio dipublikasikan.
 
 * * *
 
