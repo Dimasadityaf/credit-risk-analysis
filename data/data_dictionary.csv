@@ -1,0 +1,16 @@
+column,description,type,values
+loan_id,ID unik pinjaman (dibuat saat pembersihan),INTEGER,1 sampai 32409
+person_age,Umur peminjam dalam tahun,INTEGER,20 sampai 94
+person_income,Pendapatan tahunan peminjam (mata uang tidak disebut dataset),INTEGER,
+person_home_ownership,Status kepemilikan rumah,TEXT,RENT / MORTGAGE / OWN / OTHER
+person_emp_length,Masa kerja dalam tahun (887 baris kosong),REAL,
+loan_intent,Tujuan pinjaman,TEXT,EDUCATION / MEDICAL / VENTURE / PERSONAL / DEBTCONSOLIDATION / HOMEIMPROVEMENT
+loan_grade,Grade pinjaman (A terbaik sampai G terburuk),TEXT,A / B / C / D / E / F / G
+loan_amnt,Jumlah pinjaman,INTEGER,
+loan_int_rate,Suku bunga dalam persen (3094 baris kosong),REAL,
+loan_status,Status pinjaman,INTEGER,0 = lancar / 1 = gagal bayar
+loan_percent_income,Loan-to-Income (LTI): jumlah pinjaman dibagi pendapatan tahunan (bukan cicilan bulanan),REAL,0 sampai 0.83
+cb_person_default_on_file,Pernah gagal bayar sebelumnya,TEXT,Y / N
+cb_person_cred_hist_length,Lama riwayat kredit dalam tahun,INTEGER,
+age_group,Kelompok umur (dibuat saat pembersihan),TEXT,20-25 / 26-30 / 31-35 / 36-45 / 46+
+income_band,Kelompok pendapatan (dibuat saat pembersihan; batas bawah termasuk),TEXT,<30k / 30-50k / 50-75k / 75-100k / 100k+
